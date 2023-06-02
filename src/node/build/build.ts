@@ -6,9 +6,14 @@ import { packageDirectorySync } from 'pkg-dir'
 import { rimraf } from 'rimraf'
 import { pathToFileURL } from 'url'
 import type { BuildOptions, Rollup } from 'vite'
-import { resolveConfig, type SiteConfig } from '../config'
+import { normalizeBaseUrl, resolveConfig, type SiteConfig } from '../config'
 import { slash, type HeadConfig } from '../shared'
 import { deserializeFunctions, serializeFunctions } from '../utils/fnSerialize'
+import {
+  getDefaultAssetsBase,
+  isDefaultAssetsBase,
+  normalizeAssetUrl
+} from '../utils/assetsBase'
 import { task } from '../utils/task'
 import { bundle } from './bundle'
 import { generateSitemap } from './generateSitemap'
@@ -25,8 +30,17 @@ export async function build(
   const unlinkVue = linkVue()
 
   if (buildOptions.base) {
-    siteConfig.site.base = buildOptions.base
+    const shouldUpdateAssetsBase = isDefaultAssetsBase(
+      siteConfig.site.base,
+      siteConfig.site.assetsBase
+    )
+
+    siteConfig.site.base = normalizeBaseUrl(buildOptions.base)
     delete buildOptions.base
+
+    if (shouldUpdateAssetsBase) {
+      siteConfig.site.assetsBase = getDefaultAssetsBase(siteConfig.site.base)
+    }
   }
 
   if (buildOptions.mpa) {
@@ -39,6 +53,7 @@ export async function build(
     delete buildOptions.outDir
   }
 
+  process.env.VITE_VP_ASSETS_BASE = siteConfig.site.assetsBase
   try {
     const { clientResult, serverResult, pageToHashMap } = await bundle(
       siteConfig,
@@ -72,7 +87,7 @@ export async function build(
         .filter(
           (chunk) => chunk.type === 'asset' && !chunk.fileName.endsWith('.css')
         )
-        .map((asset) => siteConfig.site.base + asset.fileName)
+        .map((asset) => normalizeAssetUrl(siteConfig.site, asset.fileName))
 
       // default theme special handling: inject font preload
       // custom themes will need to use `transformHead` to inject this
