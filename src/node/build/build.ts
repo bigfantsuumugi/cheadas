@@ -1,12 +1,14 @@
 import { createHash } from 'crypto'
 import fs from 'fs-extra'
 import { createRequire } from 'module'
+import pMap from 'p-map'
 import path from 'path'
 import { packageDirectorySync } from 'pkg-dir'
 import { rimraf } from 'rimraf'
 import { pathToFileURL } from 'url'
 import type { BuildOptions, Rollup } from 'vite'
 import { normalizeBaseUrl, resolveConfig, type SiteConfig } from '../config'
+import { clearCache } from '../markdownToVue'
 import { slash, type HeadConfig } from '../shared'
 import { deserializeFunctions, serializeFunctions } from '../utils/fnSerialize'
 import {
@@ -121,23 +123,23 @@ export async function build(
         }
       }
 
-      await Promise.all(
-        ['404.md', ...siteConfig.pages]
-          .map((page) => siteConfig.rewrites.map[page] || page)
-          .map((page) =>
-            renderPage(
-              render,
-              siteConfig,
-              page,
-              clientResult,
-              appChunk,
-              cssChunk,
-              assets,
-              pageToHashMap,
-              metadataScript,
-              additionalHeadTags
-            )
+      await pMap(
+        ['404.md', ...siteConfig.pages],
+        async (page) => {
+          await renderPage(
+            render,
+            siteConfig,
+            siteConfig.rewrites.map[page] || page,
+            clientResult,
+            appChunk,
+            cssChunk,
+            assets,
+            pageToHashMap,
+            metadataScript,
+            additionalHeadTags
           )
+        },
+        { concurrency: siteConfig.buildConcurrency }
       )
     })
 
@@ -154,6 +156,7 @@ export async function build(
 
   await generateSitemap(siteConfig)
   await siteConfig.buildEnd?.(siteConfig)
+  clearCache()
 
   siteConfig.logger.info(
     `build complete in ${((Date.now() - start) / 1000).toFixed(2)}s.`

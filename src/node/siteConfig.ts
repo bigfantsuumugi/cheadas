@@ -149,6 +149,15 @@ export interface UserConfig<ThemeConfig = any>
   useWebFonts?: boolean
 
   /**
+   * This option allows you to configure the concurrency of the build.
+   * A lower number will reduce the memory usage but will increase the build time.
+   *
+   * @experimental
+   * @default 64
+   */
+  buildConcurrency?: number
+
+  /**
    * @experimental
    *
    * source -> destination
@@ -241,4 +250,5 @@ export interface SiteConfig<ThemeConfig = any>
   }
   logger: Logger
   userConfig: UserConfig
+  buildConcurrency: number
 }
