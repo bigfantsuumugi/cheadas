@@ -1,3 +1,39 @@
+# [1.0.0-rc.35](https://github.com/vuejs/vitepress/compare/v1.0.0-rc.34...v1.0.0-rc.35) (2024-1-3)
+
+### Bug Fixes
+
+- **client:** add computed dir and lang to html root ([c2b4c66](https://github.com/vuejs/vitepress/commit/c2b4c66e79fde7479f5f43841e1921a5c220c9a5)), closes [#3353](https://github.com//github.com/vuejs/vitepress/pull/3353/issues/issuecomment-1874753809)
+- fill all empty code lines ([563020b](https://github.com/vuejs/vitepress/commit/563020ba61abda254af9a124ddafd12de644cd4e)), closes [#3305](https://github.com/vuejs/vitepress/issues/3305)
+- fix theme chunking logic causing out-of-order styles ([#3403](https://github.com/vuejs/vitepress/issues/3403)) ([a6cd891](https://github.com/vuejs/vitepress/commit/a6cd891d95454b3130aaf08f499659d2585acc63))
+- invalidate module cache for subsequent builds ([#3398](https://github.com/vuejs/vitepress/issues/3398)) ([27f60e0](https://github.com/vuejs/vitepress/commit/27f60e0b7784603c6fb300bd8dce64515eb98962))
+
+### Features
+
+- allow passing options to emoji plugin ([09e48db](https://github.com/vuejs/vitepress/commit/09e48db355f530c7a138437004659b61239f4b75)), closes [#3174](https://github.com/vuejs/vitepress/issues/3174)
+- **theme:** allow specifying rel and target in logoLink ([6c89943](https://github.com/vuejs/vitepress/commit/6c899437c15b126b488e73c99cdaad77fc7e5611)), closes [#3264](https://github.com/vuejs/vitepress/issues/3264) [#3271](https://github.com/vuejs/vitepress/issues/3271)
+
+### Performance Improvements
+
+- **localSearch:** add concurrency pooling, cleanup logic, improve performance ([#3374](https://github.com/vuejs/vitepress/issues/3374)) ([ac5881e](https://github.com/vuejs/vitepress/commit/ac5881eeac3f042a8fbf034edb99e5f2b45eaa2a))
+
+# [1.0.0-rc.34](https://github.com/vuejs/vitepress/compare/v1.0.0-rc.33...v1.0.0-rc.34) (2023-12-30)
+
+### Bug Fixes
+
+- **build:** clear cache after build ([9568fea](https://github.com/vuejs/vitepress/commit/9568fea8fc50e625c8ef27c588eca3dbe5a44e81)), closes [#3363](https://github.com/vuejs/vitepress/issues/3363)
+- **default-theme:** remove use of reactify for search i18n ([8687b86](https://github.com/vuejs/vitepress/commit/8687b86e1e00ae39ff9c8173aef04eb8a9cda0a8))
+- print errors when importing an invalid dynamic route ([#3201](https://github.com/vuejs/vitepress/issues/3201)) ([6d89a08](https://github.com/vuejs/vitepress/commit/6d89a08cb76674f4d92f54218f8af5624bcf4c47))
+- remove double title from home pages ([9f1f04e](https://github.com/vuejs/vitepress/commit/9f1f04e00a9722ec7369941c40d3d8ad86f61d35)), closes [#3375](https://github.com/vuejs/vitepress/issues/3375)
+- **theme/i18n:** support customizing dark mode switch titles ([#3311](https://github.com/vuejs/vitepress/issues/3311)) ([50c9758](https://github.com/vuejs/vitepress/commit/50c9758d3fa1b60aad5399a0db890644ac44a522))
+
+### Features
+
+- support custom image lazy loading ([#3346](https://github.com/vuejs/vitepress/issues/3346)) ([55be3f1](https://github.com/vuejs/vitepress/commit/55be3f14d79eb578c9aa2e3bc7a90205c910005d))
+- support dir in frontmatter ([#3353](https://github.com/vuejs/vitepress/issues/3353)) ([203446d](https://github.com/vuejs/vitepress/commit/203446d69193483a46e1082bba5fbad0e35966fb))
+- **theme/i18n:** allow customizing sponsor link's text ([#3276](https://github.com/vuejs/vitepress/issues/3276)) ([9c20e3b](https://github.com/vuejs/vitepress/commit/9c20e3b5f80e4197c14c20fa751ec3c8c8219e8e))
+- **theme:** allow using VPBadge classes in sidebar ([#3391](https://github.com/vuejs/vitepress/issues/3391)) ([50a774e](https://github.com/vuejs/vitepress/commit/50a774ea7c70bb200e12c176d6691ab7144a73f9))
+- **theme:** new design for local nav and global header ([#3359](https://github.com/vuejs/vitepress/issues/3359)) ([d10bf42](https://github.com/vuejs/vitepress/commit/d10bf42c2632f1aacb905bc01b36274e9004cbd9))
+
 # [1.0.0-rc.33](https://github.com/vuejs/vitepress/compare/v1.0.0-rc.32...v1.0.0-rc.33) (2023-12-26)
 
 ### Features
