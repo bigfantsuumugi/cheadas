@@ -14,26 +14,28 @@ import { sfcPlugin, type SfcPluginOptions } from '@mdit-vue/plugin-sfc'
 import { titlePlugin } from '@mdit-vue/plugin-title'
 import { tocPlugin, type TocPluginOptions } from '@mdit-vue/plugin-toc'
 import { slugify } from '@mdit-vue/shared'
+import type { Options } from 'markdown-it'
 import MarkdownIt from 'markdown-it'
 import anchorPlugin from 'markdown-it-anchor'
 import attrsPlugin from 'markdown-it-attrs'
-// @ts-ignore
 import { full as emojiPlugin } from 'markdown-it-emoji'
 import type {
   BuiltinTheme,
   Highlighter,
   LanguageInput,
-  ShikijiTransformer,
+  ShikiTransformer,
   ThemeRegistrationAny
-} from 'shikiji'
+} from 'shiki'
 import type { Logger } from 'vite'
 import { containerPlugin, type ContainerOptions } from './plugins/containers'
+import { gitHubAlertsPlugin } from './plugins/githubAlerts'
 import { highlight } from './plugins/highlight'
 import { highlightLinePlugin } from './plugins/highlightLines'
 import { imagePlugin, type Options as ImageOptions } from './plugins/image'
 import { lineNumberPlugin } from './plugins/lineNumbers'
 import { linkPlugin } from './plugins/link'
 import { preWrapperPlugin } from './plugins/preWrapper'
+import { restoreEntities } from './plugins/restoreEntities'
 import { snippetPlugin } from './plugins/snippet'
 
 export type { Header } from '../shared'
@@ -46,7 +48,7 @@ export type ThemeOptions =
       dark: ThemeRegistrationAny | BuiltinTheme
     }
 
-export interface MarkdownOptions extends MarkdownIt.Options {
+export interface MarkdownOptions extends Options {
   /* ==================== General Options ==================== */
 
   /**
@@ -74,21 +76,21 @@ export interface MarkdownOptions extends MarkdownIt.Options {
    * @example { theme: { light: 'github-light', dark: 'github-dark' } }
    *
    * You can use an existing theme.
-   * @see https://github.com/antfu/shikiji/blob/main/docs/themes.md#all-themes
+   * @see https://shiki.style/themes
    * Or add your own theme.
-   * @see https://github.com/antfu/shikiji/blob/main/docs/themes.md#load-custom-themes
+   * @see https://shiki.style/guide/load-theme
    */
   theme?: ThemeOptions
   /**
    * Languages for syntax highlighting.
-   * @see https://github.com/antfu/shikiji/blob/main/docs/languages.md#all-themes
+   * @see https://shiki.style/languages
    */
   languages?: LanguageInput[]
   /**
    * Custom language aliases.
    *
    * @example { 'my-lang': 'js' }
-   * @see https://github.com/antfu/shikiji/tree/main#custom-language-aliases
+   * @see https://shiki.style/guide/load-lang#custom-language-aliases
    */
   languageAlias?: Record<string, string>
   /**
@@ -102,13 +104,18 @@ export interface MarkdownOptions extends MarkdownIt.Options {
   defaultHighlightLang?: string
   /**
    * Transformers applied to code blocks
-   * @see https://github.com/antfu/shikiji#hast-transformers
+   * @see https://shiki.style/guide/transformers
    */
-  codeTransformers?: ShikijiTransformer[]
+  codeTransformers?: ShikiTransformer[]
   /**
-   * Setup Shikiji instance
+   * Setup Shiki instance
    */
-  shikijiSetup?: (shikiji: Highlighter) => void | Promise<void>
+  shikiSetup?: (shiki: Highlighter) => void | Promise<void>
+  /**
+   * The tooltip text for the copy button in code blocks
+   * @default 'Copy Code'
+   */
+  codeCopyButtonTitle?: string
 
   /* ==================== Markdown It Plugins ==================== */
 
@@ -176,6 +183,12 @@ export interface MarkdownOptions extends MarkdownIt.Options {
    */
   math?: boolean | any
   image?: ImageOptions
+  /**
+   * Allows disabling the github alerts plugin
+   * @default true
+   * @see https://vitepress.dev/guide/markdown#github-flavored-alerts
+   */
+  gfmAlerts?: boolean
 }
 
 export type MarkdownRenderer = MarkdownIt
@@ -187,6 +200,7 @@ export const createMarkdownRenderer = async (
   logger: Pick<Logger, 'warn'> = console
 ): Promise<MarkdownRenderer> => {
   const theme = options.theme ?? { light: 'github-light', dark: 'github-dark' }
+  const codeCopyButtonTitle = options.codeCopyButtonTitle || 'Copy Code'
   const hasSingleTheme = typeof theme === 'string' || 'name' in theme
 
   const md = MarkdownIt({
@@ -197,6 +211,7 @@ export const createMarkdownRenderer = async (
   })
 
   md.linkify.set({ fuzzyLink: false })
+  md.use(restoreEntities)
 
   if (options.preConfig) {
     options.preConfig(md)
@@ -205,7 +220,7 @@ export const createMarkdownRenderer = async (
   // custom plugins
   md.use(componentPlugin, { ...options.component })
     .use(highlightLinePlugin)
-    .use(preWrapperPlugin, { hasSingleTheme })
+    .use(preWrapperPlugin, { codeCopyButtonTitle, hasSingleTheme })
     .use(snippetPlugin, srcDir)
     .use(containerPlugin, { hasSingleTheme }, options.container)
     .use(imagePlugin, options.image)
@@ -216,7 +231,11 @@ export const createMarkdownRenderer = async (
     )
     .use(lineNumberPlugin, options.lineNumbers)
 
-  // 3rd party plugins
+  if (options.gfmAlerts !== false) {
+    md.use(gitHubAlertsPlugin)
+  }
+
+  // third party plugins
   if (!options.attrs?.disable) {
     md.use(attrsPlugin, options.attrs)
   }

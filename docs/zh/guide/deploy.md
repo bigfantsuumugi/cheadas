@@ -33,7 +33,7 @@ outline: deep
    $ npm run docs:preview
    ```
 
-   `preview` 命令将启动一个本地静态 Web 服务器`http://localhost:4173`，该服务器以 `.vitepress/dist` 作为源文件。这是检查生产版本在本地环境中是否正常的一种简单方法。
+   `preview` 命令将启动一个本地静态 Web 服务 `http://localhost:4173`，该服务以 `.vitepress/dist` 作为源文件。这是检查生产版本在本地环境中是否正常的一种简单方法。
 
 3. 可以通过传递 `--port` 作为参数来配置服务器的端口。
 
@@ -45,13 +45,13 @@ outline: deep
    }
    ```
 
-   现在 `docs:preview` 方法将在 `http://localhost:8080` 启动服务器。
+   现在 `docs:preview` 方法将会在 `http://localhost:8080` 启动服务。
 
 ## 设定 public 根目录 {#setting-a-public-base-path}
 
-默认情况下，我们假设站点将部署在域名 （`/`）的根路径上。如果站点在子路径中提供服务，例如 `https://mywebsite.com/blog/`，则需要在 VitePress 配置中将 [`base`](../reference/site-config#base)选项设置为 `'/blog/'`。
+默认情况下，我们假设站点将部署在域名 (`/`) 的根路径上。如果站点在子路径中提供服务，例如 `https://mywebsite.com/blog/`，则需要在 VitePress 配置中将 [`base`](../reference/site-config#base) 选项设置为 `'/blog/'`。
 
-**例：** 如果你使用的是 Github（或 GitLab）页面并部署到 `user.github.io/repo/`，请将 `base` 设置为 `/repo/`。
+**例**：如果你使用的是 Github（或 GitLab）页面并部署到 `user.github.io/repo/`，请将 `base` 设置为 `/repo/`。
 
 ## HTTP 缓存标头 {#http-cache-headers}
 
@@ -73,7 +73,7 @@ Cache-Control: max-age=31536000,immutable
   cache-control: immutable
 ```
 
-注意：该 `_headers` 文件应放置在[public 目录](/guide/asset-handling#the-public-directory)中（在我们的例子中是 `docs/public/_headers`），以便将其逐字复制到输出目录。
+注意：该 `_headers` 文件应放置在 [public 目录](/guide/asset-handling#the-public-directory)中 (在我们的例子中是 `docs/public/_headers`)，以便将其逐字复制到输出目录。
 
 [Netlify 自定义标头文档](https://docs.netlify.com/routing/headers/)
 
@@ -127,12 +127,12 @@ Cache-Control: max-age=31536000,immutable
    name: Deploy VitePress site to Pages
 
    on:
-     # 在针对 `main` 分支的推送上运行。如果您
+     # 在针对 `main` 分支的推送上运行。如果你
      # 使用 `master` 分支作为默认分支，请将其更改为 `master`
      push:
        branches: [main]
 
-     # 允许您从 Actions 选项卡手动运行此工作流程
+     # 允许你从 Actions 选项卡手动运行此工作流程
      workflow_dispatch:
 
    # 设置 GITHUB_TOKEN 的权限，以允许部署到 GitHub Pages
@@ -153,26 +153,24 @@ Cache-Control: max-age=31536000,immutable
        runs-on: ubuntu-latest
        steps:
          - name: Checkout
-           uses: actions/checkout@v3
+           uses: actions/checkout@v4
            with:
              fetch-depth: 0 # 如果未启用 lastUpdated，则不需要
-         # - uses: pnpm/action-setup@v2 # 如果使用 pnpm，请取消注释
+         # - uses: pnpm/action-setup@v3 # 如果使用 pnpm，请取消注释
          # - uses: oven-sh/setup-bun@v1 # 如果使用 Bun，请取消注释
          - name: Setup Node
-           uses: actions/setup-node@v3
+           uses: actions/setup-node@v4
            with:
-             node-version: 18
+             node-version: 20
              cache: npm # 或 pnpm / yarn
          - name: Setup Pages
-           uses: actions/configure-pages@v3
+           uses: actions/configure-pages@v4
          - name: Install dependencies
            run: npm ci # 或 pnpm install / yarn install / bun install
          - name: Build with VitePress
-           run: |
-             npm run docs:build # 或 pnpm docs:build / yarn docs:build / bun run docs:build
-             touch docs/.vitepress/dist/.nojekyll
+           run: npm run docs:build # 或 pnpm docs:build / yarn docs:build / bun run docs:build
          - name: Upload artifact
-           uses: actions/upload-pages-artifact@v2
+           uses: actions/upload-pages-artifact@v3
            with:
              path: docs/.vitepress/dist
 
@@ -187,7 +185,7 @@ Cache-Control: max-age=31536000,immutable
        steps:
          - name: Deploy to GitHub Pages
            id: deployment
-           uses: actions/deploy-pages@v2
+           uses: actions/deploy-pages@v4
    ```
 
    ::: warning
@@ -289,3 +287,51 @@ Cache-Control: max-age=31536000,immutable
 ### Kinsta 静态站点托管 {#kinsta-static-site-hosting}
 
 你可以按照这些[说明](https://kinsta.com/docs/vitepress-static-site-example/) 在 [Kinsta](https://kinsta.com/static-site-hosting/) 上部署 Vitepress 站点。
+
+### Stormkit
+
+你可以按照这些[说明](https://stormkit.io/blog/how-to-deploy-vitepress)将你的 VitePress 项目部署到 [Stormkit](https://www.stormkit.io)。
+
+### Nginx
+
+下面是一个 Nginx 服务器块配置示例。此配置包括对基于文本的常见资源的 gzip 压缩、使用适当缓存头为 VitePress 站点静态文件提供服务的规则以及处理 `cleanUrls: true` 的方法。
+
+```nginx
+server {
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    listen 80;
+    server_name _;
+    index index.html;
+
+    location / {
+        # content location
+        root /app;
+
+        # exact matches -> reverse clean urls -> folders -> not found
+        try_files $uri $uri.html $uri/ =404;
+
+        # non existent pages
+        error_page 404 /404.html;
+
+        # a folder without index.html raises 403 in this setup
+        error_page 403 /404.html;
+        
+        # adjust caching headers
+        # files in the assets folder have hashes filenames
+        location ~* ^/assets/ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+}
+```
+
+本配置默认已构建的 VitePress 站点位于服务器上的 `/app` 目录中。如果站点文件位于其他位置，请相应调整 `root` 指令。
+
+::: warning 不要默认为 index.html
+try_files 解析不能像其他 Vue 应用那样默认为 index.html。这会导致页面状态处于无效。
+:::
+
+更多信息请参见 [nginx 官方文档](https://nginx.org/en/docs/)、这些 GitHub Issue [#2837](https://github.com/vuejs/vitepress/discussions/2837)、[#3235](https://github.com/vuejs/vitepress/issues/3235)以及 Mehdi Merah 发表的[博客](https://blog.mehdi.cc/articles/vitepress-cleanurls-on-nginx-environment#readings)。

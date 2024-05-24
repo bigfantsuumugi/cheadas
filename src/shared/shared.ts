@@ -16,13 +16,15 @@ export type {
 
 export const EXTERNAL_URL_RE = /^(?:[a-z]+:|\/\/)/i
 export const APPEARANCE_KEY = 'vitepress-theme-appearance'
-export const HASH_RE = /#.*$/
-export const EXT_RE = /(index)?\.(md|html)$/
+
+const HASH_RE = /#.*$/
+const HASH_OR_QUERY_RE = /[?#].*$/
+const INDEX_OR_EXT_RE = /(?:(^|\/)index)?\.(?:md|html)$/
 
 export const inBrowser = typeof document !== 'undefined'
 
 export const notFoundPageData: PageData = {
-  relativePath: '',
+  relativePath: '404.md',
   filePath: '',
   title: '404',
   description: 'Not Found',
@@ -60,12 +62,28 @@ export function isActive(
   return true
 }
 
-export function normalize(path: string): string {
-  return decodeURI(path).replace(HASH_RE, '').replace(EXT_RE, '')
+function normalize(path: string): string {
+  return decodeURI(path)
+    .replace(HASH_OR_QUERY_RE, '')
+    .replace(INDEX_OR_EXT_RE, '$1')
 }
 
 export function isExternal(path: string): boolean {
   return EXTERNAL_URL_RE.test(path)
+}
+
+export function getLocaleForPath(
+  siteData: SiteData | undefined,
+  relativePath: string
+): string {
+  return (
+    Object.keys(siteData?.locales || {}).find(
+      (key) =>
+        key !== 'root' &&
+        !isExternal(key) &&
+        isActive(relativePath, `/${key}/`, true)
+    ) || 'root'
+  )
 }
 
 /**
@@ -75,13 +93,7 @@ export function resolveSiteDataByRoute(
   siteData: SiteData,
   relativePath: string
 ): SiteData {
-  const localeIndex =
-    Object.keys(siteData.locales).find(
-      (key) =>
-        key !== 'root' &&
-        !isExternal(key) &&
-        isActive(relativePath, `/${key}/`, true)
-    ) || 'root'
+  const localeIndex = getLocaleForPath(siteData, relativePath)
 
   return Object.assign({}, siteData, {
     localeIndex,
@@ -175,22 +187,29 @@ export function slash(p: string): string {
   return p.replace(/\\/g, '/')
 }
 
-// md, html? are intentionally omitted, see treatAsHtml
-const KNOWN_EXTENSIONS = new Set(
-  (
-    '3g2,3gp,7z,aac,abw,ai,aif,aifc,aiff,arc,asf,asr,asx,au,avi,avif,axs,' +
-    'azw,bin,bmp,bz,bz2,c,cda,cer,class,crl,crt,csh,css,csv,dcr,der,dll,doc,' +
-    'docx,eot,eps,epub,exe,gif,gtar,gz,gzip,ico,ics,ief,jar,jpe,jpeg,jpg,js,' +
-    'json,jsonld,latex,m3u,man,mdb,mht,mhtml,mid,midi,mjs,mov,mp2,mp3,mp4,' +
-    'mpa,mpe,mpeg,mpg,mpkg,mpp,odp,ods,odt,oga,ogv,ogx,opus,otf,p10,p12,p7b,' +
-    'p7c,p7m,p7r,p7s,pbm,pdf,pfx,php,png,ppt,pptx,ps,pub,qt,rar,roff,rtf,' +
-    'rtx,ser,sh,spc,svg,swf,t,tar,tcl,tex,texi,texinfo,tgz,tif,tiff,tr,ts,' +
-    'tsv,ttf,txt,ua,viv,vivo,vsd,wav,weba,webm,webp,woff,woff2,xbm,xhtml,' +
-    'xls,xlsx,xml,xul,zip,conf'
-  ).split(',')
-)
+const KNOWN_EXTENSIONS = new Set()
 
 export function treatAsHtml(filename: string): boolean {
+  if (KNOWN_EXTENSIONS.size === 0) {
+    const extraExts =
+      (typeof process === 'object' && process.env?.VITE_EXTRA_EXTENSIONS) ||
+      (import.meta as any).env?.VITE_EXTRA_EXTENSIONS ||
+      ''
+
+    // md, html? are intentionally omitted
+    ;(
+      '3g2,3gp,aac,ai,apng,au,avif,bin,bmp,cer,class,conf,crl,css,csv,dll,' +
+      'doc,eps,epub,exe,gif,gz,ics,ief,jar,jpe,jpeg,jpg,js,json,jsonld,m4a,' +
+      'man,mid,midi,mjs,mov,mp2,mp3,mp4,mpe,mpeg,mpg,mpp,oga,ogg,ogv,ogx,' +
+      'opus,otf,p10,p7c,p7m,p7s,pdf,png,ps,qt,roff,rtf,rtx,ser,svg,t,tif,' +
+      'tiff,tr,ts,tsv,ttf,txt,vtt,wav,weba,webm,webp,woff,woff2,xhtml,xml,' +
+      'yaml,yml,zip' +
+      (extraExts && typeof extraExts === 'string' ? ',' + extraExts : '')
+    )
+      .split(',')
+      .forEach((ext) => KNOWN_EXTENSIONS.add(ext))
+  }
+
   const ext = filename.split('.').pop()
 
   return ext == null || !KNOWN_EXTENSIONS.has(ext.toLowerCase())
@@ -199,4 +218,15 @@ export function treatAsHtml(filename: string): boolean {
 // https://github.com/sindresorhus/escape-string-regexp/blob/ba9a4473850cb367936417e97f1f2191b7cc67dd/index.js
 export function escapeRegExp(str: string) {
   return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&').replace(/-/g, '\\x2d')
+}
+
+/**
+ * @internal
+ */
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/&(?![\w#]+;)/g, '&amp;')
 }

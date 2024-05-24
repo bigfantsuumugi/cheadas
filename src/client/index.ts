@@ -20,7 +20,9 @@ export {
   inBrowser,
   onContentUpdated,
   defineClientComponent,
-  withBase
+  withBase,
+  getScrollOffset,
+  _escapeHtml
 } from './app/utils'
 
 // components
