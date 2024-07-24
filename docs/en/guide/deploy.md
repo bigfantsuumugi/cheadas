@@ -177,7 +177,7 @@ Don't enable options like _Auto Minify_ for HTML code. It will remove comments f
         #       ${{ runner.os }}-pnpm-store-
 
         # Uncomment this if you're using Bun
-        # - uses: oven-sh/setup-bun@v1
+        # - uses: oven-sh/setup-bun@v2
          - name: Setup Node
            uses: actions/setup-node@v4
            with:
